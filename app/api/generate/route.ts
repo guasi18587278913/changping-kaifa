@@ -4,10 +4,17 @@ import OpenAI from 'openai';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-const client = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+// Initialize OpenAI client with safe defaults
+function createOpenAIClient() {
+  return new OpenAI({
+    baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+    apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key-for-build',
+    defaultHeaders: {
+      "HTTP-Referer": "https://changping-kaifa.vercel.app",
+      "X-Title": "吵架包赢",
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +50,7 @@ export async function POST(request: NextRequest) {
     const userPrompt = `对方说：${opponentText}
 请根据这句话，给我生成三条强有力的回应，帮助我在争论中获胜。请确保回应语气强度为${intensity}/10级别。`;
 
+    const client = createOpenAIClient();
     const completion = await client.chat.completions.create({
       model: "google/gemini-flash-1.5-8b",
       messages: [
